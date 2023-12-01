@@ -1,2 +1,13 @@
-# runtime-decrease
-Implementation of runtime behaviour for decrease (termination check)
+# Runtime Decrease
+
+## Run
+
+```
+sbt run
+```
+
+## Format
+
+```
+sbt scalafmtAll
+```
