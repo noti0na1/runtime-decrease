@@ -55,7 +55,8 @@ def decreases[V: Ordering, T](x: V)(using
 
 def loop_decreases[V: Ordering, T](label: String, x: V)(using
     state: DecreaseState,
-    default: DefaultValue[V])(body: DecreaseState ?=> T) =
+    default: DefaultValue[V]
+)(body: DecreaseState ?=> T) =
   genericDecreases(
     getFunctionName(1) + "-" + label,
     x
