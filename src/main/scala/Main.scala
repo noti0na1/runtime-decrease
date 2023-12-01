@@ -1,5 +1,6 @@
 @main def testDecrease: Unit =
   println(summon[DefaultValue[(Int, Int)]].value)
+  // println(getFunctionName(0))
 
   given DecreaseState = DecreaseState(Map.empty)
 
@@ -17,7 +18,7 @@ object McCarthy91:
   } ensuring (_ >= 0)
 
   def M(n: BigInt)(using DecreaseState): BigInt =
-    decreases("McCarthy91.M", rank(n)) {
+    decreases(rank(n)) {
       if (n > 100)
         n - 10
       else
@@ -25,7 +26,7 @@ object McCarthy91:
     } ensuring (res => res == (if (n <= 100) BigInt(91) else n - 10))
 
   def M1(n: BigInt)(using DecreaseState): BigInt =
-    decreases("McCarthy91.M1", n) { // fails run-time check
+    decreases(n) { // fails run-time check
       if (n > 100)
         n - 10
       else
@@ -43,7 +44,7 @@ object DisjunctiveArguments:
     // termination; instead we must resort to a lexicographic ranking function:
     // (x, y)
     while (x > 0) && (y > 0) do
-      decreases("DisjunctiveArguments.f.while0", (x, y)):
+      loop_decreases("while0", (x, y)):
         println(s"while x: ${x}, y: ${y}")
         if rand.nextInt(2) == 1 then
           x = x - 1

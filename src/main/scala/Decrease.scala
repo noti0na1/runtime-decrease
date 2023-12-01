@@ -39,10 +39,33 @@ given [T <: NonEmptyTuple](using
 
 import math.Ordering.Implicits.infixOrderingOps
 
-inline def decreases[V: Ordering, T](name: String, x: V)(using
+def getFunctionName(offset: Int = 0): String = {
+  val stackTrace = Thread.currentThread.getStackTrace
+  stackTrace(offset + 2).getMethodName
+}
+
+def decreases[V: Ordering, T](x: V)(using
     state: DecreaseState,
     default: DefaultValue[V]
-)(inline body: DecreaseState ?=> T) =
+)(body: DecreaseState ?=> T) =
+  genericDecreases(
+    getFunctionName(1),
+    x
+  )(body)
+
+def loop_decreases[V: Ordering, T](label: String, x: V)(using
+    state: DecreaseState,
+    default: DefaultValue[V])(body: DecreaseState ?=> T) =
+  genericDecreases(
+    getFunctionName(1) + "-" + label,
+    x
+  )(body)
+
+def genericDecreases[V: Ordering, T](name: String, x: V)(using
+    state: DecreaseState,
+    default: DefaultValue[V]
+)(body: DecreaseState ?=> T) =
+  // println(s"decrease: ${name}, ${x}")
   if x < default.value then
     throw IllegalArgumentException(
       s"decrease called with negative measure: ${x}"
