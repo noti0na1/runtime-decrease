@@ -1,4 +1,6 @@
 @main def testDecrease: Unit =
+  println(summon[DefaultValue[(Int, Int)]].value)
+
   given DecreaseState = DecreaseState(Map.empty)
 
   println(DisjunctiveArguments.f(10, 10))

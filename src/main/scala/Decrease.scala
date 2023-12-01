@@ -5,16 +5,25 @@ case class DecreaseState(stack: Map[String, Any]) {
   )
 }
 
-trait WellOrdering[T: Ordering]:
-  def zero: T
+trait DefaultValue[T]:
+  def value: T
 
-given WellOrdering[Int] with
-  def zero = 0
+given DefaultValue[Int] with
+  def value = 0
 
-given WellOrdering[BigInt] with
-  def zero = BigInt(0)
+given DefaultValue[BigInt] with
+  def value = BigInt(0)
 
 import Tuple.*
+
+given DefaultValue[EmptyTuple] with
+  def value = EmptyTuple
+
+given [H, T <: Tuple](using
+    head: DefaultValue[H],
+    tail: DefaultValue[T]
+): DefaultValue[H *: T] with
+  def value: H *: T = head.value *: tail.value
 
 given Ordering[EmptyTuple] with
   def compare(x: EmptyTuple, y: EmptyTuple): Int = 0
@@ -28,24 +37,13 @@ given [T <: NonEmptyTuple](using
     if cmp == 0 then tailOrd.compare(x.tail, y.tail)
     else cmp
 
-given WellOrdering[EmptyTuple] with
-  def zero = EmptyTuple
-
-given [T <: NonEmptyTuple](using
-    headOrd: Ordering[Head[T]],
-    headWO: WellOrdering[Head[T]],
-    tailOrd: Ordering[Tail[T]],
-    tailWO: WellOrdering[Tail[T]]
-): WellOrdering[T] with
-  def zero: T = (headWO.zero *: tailWO.zero).asInstanceOf[T]
-
 import math.Ordering.Implicits.infixOrderingOps
 
 inline def decreases[V: Ordering, T](name: String, x: V)(using
     state: DecreaseState,
-    ord: WellOrdering[V]
+    default: DefaultValue[V]
 )(inline body: DecreaseState ?=> T) =
-  if x < ord.zero then
+  if x < default.value then
     throw IllegalArgumentException(
       s"decrease called with negative measure: ${x}"
     )
