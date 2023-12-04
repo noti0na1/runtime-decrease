@@ -5,6 +5,9 @@ case class DecreaseState(stack: Map[String, Any]) {
   )
 }
 
+object EmptyDecreaseState:
+  given DecreaseState = DecreaseState(Map.empty)
+
 trait DefaultValue[T]:
   def value: T
 
@@ -41,7 +44,8 @@ import math.Ordering.Implicits.infixOrderingOps
 
 def getFunctionName(offset: Int = 0): String = {
   val stackTrace = Thread.currentThread.getStackTrace
-  stackTrace(offset + 2).getMethodName
+  val elem = stackTrace(offset + 2)
+  elem.getClassName() + "." + elem.getMethodName
 }
 
 def decreases[V: Ordering, T](x: V)(using
@@ -58,7 +62,7 @@ def loop_decreases[V: Ordering, T](label: String, x: V)(using
     default: DefaultValue[V]
 )(body: DecreaseState ?=> T) =
   genericDecreases(
-    getFunctionName(1) + "-" + label,
+    getFunctionName(1) + "$" + label,
     x
   )(body)
 

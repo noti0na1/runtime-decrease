@@ -11,5 +11,5 @@ lazy val root = project
       "-source:future"
     ),
 
-    libraryDependencies += "org.scalameta" %% "munit" % "0.7.29" % Test
+    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.17.0" % Test
   )
