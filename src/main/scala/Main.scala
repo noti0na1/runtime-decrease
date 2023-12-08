@@ -1,13 +1,37 @@
 @main def testDecrease: Unit =
-  println(summon[DefaultValue[(Int, Int)]].value)
+  // println(summon[DefaultValue[(Int, Int)]].value)
   // println(getFunctionName(0))
 
   given DecreaseState = DecreaseState(Map.empty)
+
+  println(YCombinator.factorialY(10))
+
+  println(Ackermann.ack(3, 3))
 
   println(DisjunctiveArguments.f(10, 10))
 
   println(McCarthy91.M(10))
   println(McCarthy91.M1(10)) // expect error
+
+object YCombinator:
+  def y[A, B](f: (A => B) => A => B): A => B =
+    f(y(f))(_)
+
+  def factorial(
+      f: Int => DecreaseState ?=> Int
+  )(n: Int)(using DecreaseState): Int =
+    decreases(n):
+      if n == 0 then 1
+      else n * f(n - 1)
+
+  def factorialY: Int => DecreaseState ?=> Int = y(factorial)
+
+object Ackermann:
+  def ack(m: BigInt, n: BigInt)(using DecreaseState): BigInt =
+    decreases((m, n)):
+      if m == 0 then n + 1
+      else if n == 0 then ack(m - 1, 1)
+      else ack(m - 1, ack(m, n - 1))
 
 object McCarthy91:
   def rank(n: BigInt): BigInt = {
