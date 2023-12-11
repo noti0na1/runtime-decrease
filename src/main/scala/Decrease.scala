@@ -1,7 +1,16 @@
-case class DecreaseState(stack: Map[String, Any]) {
+case class DecreaseState(
+    stack: Map[String, Any] = Map.empty,
+    recur_degrees: Map[String, Int] = Map.empty
+) {
   def apply(key: String): Option[Any] = stack.get(key)
   def set(key: String, value: Any): DecreaseState = DecreaseState(
-    stack + (key -> value)
+    stack + (key -> value),
+    recur_degrees
+  )
+  def get_degree(key: String): Option[Int] = recur_degrees.get(key)
+  def set_degree(key: String, value: Int): DecreaseState = DecreaseState(
+    stack,
+    recur_degrees + (key -> value)
   )
 }
 
@@ -47,6 +56,8 @@ def getFunctionName(offset: Int = 0): String = {
   val elem = stackTrace(offset + 2)
   elem.getClassName() + "." + elem.getMethodName
 }
+
+def ds(using state: DecreaseState): DecreaseState = state
 
 def decreases[V: Ordering, T](x: V)(using
     state: DecreaseState,

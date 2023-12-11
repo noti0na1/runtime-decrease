@@ -4,18 +4,22 @@
 
   given DecreaseState = DecreaseState(Map.empty)
 
-  println(YCombinator.factorialY(10))
+  println(Trees.tree1.mapValue(_ + 1))
 
-  println(Ackermann.ack(3, 3))
+  // println(YCombinator.factorialY(10))\
 
-  println(DisjunctiveArguments.f(10, 10))
+  println(YCombinator.quicksortY(List(6, 2, 3, 0, 3, 6, 7, 8, 9, 1)))
 
-  println(McCarthy91.M(10))
-  println(McCarthy91.M1(10)) // expect error
+  // println(Ackermann.ack(3, 3))
+
+  // println(DisjunctiveArguments.f(10, 10))
+
+  // println(McCarthy91.M(10))
+  // println(McCarthy91.M1(10)) // expect error
 
 object YCombinator:
-  def y[A, B](f: (A => B) => A => B): A => B =
-    f(y(f))(_)
+  def fix[A, B](f: (A => B) => A => B): A => B =
+    f(fix(f))(_)
 
   def factorial(
       f: Int => DecreaseState ?=> Int
@@ -24,7 +28,36 @@ object YCombinator:
       if n == 0 then 1
       else n * f(n - 1)
 
-  def factorialY: Int => DecreaseState ?=> Int = y(factorial)
+  def factorialY: Int => DecreaseState ?=> Int = fix(factorial)
+
+  def fix2[A, B, C, D](
+      f: ((A => B), (C => D)) => A => B,
+      g: ((A => B), (C => D)) => C => D
+  ): (A => B, C => D) =
+    (f(fix2(f, g)._1, fix2(f, g)._2)(_), g(fix2(f, g)._1, fix2(f, g)._2)(_))
+
+  def quicksort(
+      qs: List[Int] => List[Int],
+      p: ((Int, List[Int], List[Int], List[Int])) => List[Int]
+  )(xs: List[Int]): List[Int] =
+    xs match
+      case Nil => Nil
+      case x :: xs =>
+        p(x, Nil, Nil, xs)
+
+  def par(
+      qs: List[Int] => List[Int],
+      p: ((Int, List[Int], List[Int], List[Int])) => List[Int]
+  )(x: Int, l: List[Int], r: List[Int], xs: List[Int]): List[Int] =
+    xs match
+      case Nil => qs(l) ++ (x :: qs(r))
+      case y :: ys =>
+        if y < x then p(x, y :: l, r, ys)
+        else p(x, l, y :: r, ys)
+
+  def quicksortY: List[Int] => List[Int] = fix2[List[Int], List[
+    Int
+  ], (Int, List[Int], List[Int], List[Int]), List[Int]](quicksort, par)._1
 
 object Ackermann:
   def ack(m: BigInt, n: BigInt)(using DecreaseState): BigInt =
