@@ -8,7 +8,6 @@ object TestModel extends Properties("Test Model") {
 
   property("correctness of max operator") = forAll { (arr: List[Int]) =>
     !arr.isEmpty ==> {
-        
       Model.max(arr) == arr.max
     }
   }

@@ -3,7 +3,7 @@ import org.scalacheck.Prop.*
 import org.scalacheck.Gen
 import org.scalacheck.Arbitrary
 
-object TestQuickSort extends Properties("Test TestQuickSort") {
+object TestQuickSort extends Properties("Test QuickSort") {
   import EmptyDecreaseState.given
 
   property("correctness of quicksort") = forAll { (arr: Array[Int]) =>
