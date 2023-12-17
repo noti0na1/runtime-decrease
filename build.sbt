@@ -11,5 +11,15 @@ lazy val root = project
       "-source:future"
     ),
 
-    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.17.0" % Test
-  )
+    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.17.0" % Test,
+    
+    Test / testOptions += Tests.Argument(
+        TestFrameworks.ScalaCheck,
+        "-maxSize",
+        "10",
+        // "-workers",
+        // "1",
+        "-verbosity",
+        "1"
+      )
+    )

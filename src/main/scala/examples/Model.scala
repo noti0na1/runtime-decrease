@@ -3,11 +3,11 @@ object Model:
   def fold(f: (Int, Int) => Int, l: List[Int], a: Int)(using
       DecreaseState
   ): Int = {
-    decreases(l.size)
-    l match {
-      case Nil      => a
-      case hd :: tl => f(hd, fold(f, tl, a))
-    }
+    decreases(l.size):
+      l match {
+        case Nil      => a
+        case hd :: tl => f(hd, fold(f, tl, a))
+      }
   }
 
   def max(lst: List[Int])(using
@@ -23,4 +23,3 @@ object Model:
         )
     }
   }
-

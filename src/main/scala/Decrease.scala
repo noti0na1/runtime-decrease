@@ -1,21 +1,12 @@
-val RECUR_THRESHOLD = 100
-
 case class DecreaseState(
-    stack: Map[String, (Any, Int)] = Map.empty,
+    stack: Map[String, Any] = Map.empty,
     recur_degrees: Map[String, Int] = Map.empty
 ) {
   def apply(key: String): Option[Any] = stack.get(key)
-  def set(key: String, value: Any): DecreaseState = {
-    if stack.getOrElse(key, (value, 0))._2 > RECUR_THRESHOLD then
-      throw IllegalArgumentException(
-        s"decrease called more than ${RECUR_THRESHOLD} times: ${key}"
-      )
-  
-    DecreaseState(
-      stack + (key -> (value, stack.get(key).getOrElse((value, 0))._2 + 1))
-    )
-  }
-
+  def set(key: String, value: Any): DecreaseState = DecreaseState(
+    stack + (key -> value),
+    recur_degrees
+  )
   def get_degree(key: String): Option[Int] = recur_degrees.get(key)
   def set_degree(key: String, value: Int): DecreaseState = DecreaseState(
     stack,
