@@ -66,14 +66,18 @@ def decreases[V: Ordering, T](x: V)(using
     x
   )(body)
 
-def loop_decreases[V: Ordering, T](label: String, x: V)(using
+def while_decreases[V: Ordering, T](label: String, cond: => Boolean, x: => V)(using
     state: DecreaseState,
     default: DefaultValue[V]
-)(body: DecreaseState ?=> T) =
-  genericDecreases(
-    getFunctionName(1) + "$" + label,
-    x
-  )(body)
+)(body: DecreaseState ?=> Unit): Unit =
+  if cond then
+    genericDecreases(
+      getFunctionName(1) + "$" + label,
+      x
+    ) {
+      body
+      while_decreases(label, cond, x)(body)
+    }
 
 def genericDecreases[V: Ordering, T](name: String, x: V)(using
     state: DecreaseState,

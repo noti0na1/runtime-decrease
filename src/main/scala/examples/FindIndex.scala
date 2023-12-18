@@ -7,9 +7,8 @@ object FindIndex:
   ): Int =
     var i: Int = 0
     boundary:
-      while i < a.length do
-        loop_decreases("while0", a.length - i) {
-          if a(i) == t then break(i)
-          i += 1
-        }
+      while_decreases("while0", i < a.length, a.length - i) {
+        if a(i) == t then break(i)
+        i += 1
+      }
     i
