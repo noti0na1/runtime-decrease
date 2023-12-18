@@ -12,5 +12,4 @@ object FindIndex:
           if a(i) == t then break(i)
           i += 1
         }
-
     i

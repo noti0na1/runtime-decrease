@@ -14,6 +14,5 @@ object DisjunctiveArguments:
         if rand.nextInt(2) == 1 then
           x = x - 1
           y = y + 1
-          // McCarthy91.M(y)
         else y = y - 1
     (x, y)

@@ -82,7 +82,7 @@ def genericDecreases[V: Ordering, T](name: String, x: V)(using
   // println(s"decrease: ${name}, ${x}")
   if x < default.value then
     throw IllegalArgumentException(
-      s"decrease called with negative measure: ${x}"
+      s"decrease called with negative measure: ${x} at ${name}"
     )
   else
     state(name) match
@@ -90,7 +90,7 @@ def genericDecreases[V: Ordering, T](name: String, x: V)(using
         // println(s"last: ${last}, x: ${x}")
         if x >= last.asInstanceOf[V] then
           throw IllegalArgumentException(
-            s"decrease measure not decreased: ${last} <= ${x}"
+            s"decrease measure not decreased: ${last} <= ${x} at ${name}"
           )
       case None =>
       // println(s"first: ${x}")
