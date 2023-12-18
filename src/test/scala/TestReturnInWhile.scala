@@ -13,4 +13,8 @@ object TestReturnInWhile extends Properties("Test ReturnInWhile") {
             ReturnInWhile.returnN(n) == n
         }    
     }
+
+    property("correctness of return10") = ReturnInWhile.return10() == 10
+
+    property("correctness of return20") = ReturnInWhile.return20() == 20
 }
