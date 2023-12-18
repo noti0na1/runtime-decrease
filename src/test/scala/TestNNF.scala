@@ -2,22 +2,18 @@ import org.scalacheck.Properties
 import org.scalacheck.Prop.*
 import org.scalacheck.Gen
 import org.scalacheck.Arbitrary
-import NNF.Formula
-import NNF.{And, Or, Implies, Not, Literal}
-import NNF.simplify
-import NNF.isSimplified
-import NNF.nnf
-import NNF.isNNF
-import NNF.eval
+import NNF.*
+
+// import io.github.martinhh.derived.scalacheck.given
 
 object TestNNF extends Properties("Test NNF"):
   import EmptyDecreaseState.given
 
-  implicit val arbitraryFormula: Arbitrary[Formula] = Arbitrary(genFormula(100))
+  implicit val arbitraryFormula: Arbitrary[Formula] = Arbitrary(Gen.sized(genFormula(_)))
 
   // Generate an arbitrary Formula with a bounded size
-  def genFormula(maxSize: Int): Gen[Formula] = Gen.sized { size =>
-    if size <= 0 || maxSize <= 0 then genLiteral
+  def genFormula(maxSize: Int): Gen[Formula] =
+    if maxSize <= 0 then genLiteral
     else
       Gen.oneOf(
         genAnd(maxSize - 1),
@@ -26,7 +22,6 @@ object TestNNF extends Properties("Test NNF"):
         genNot(maxSize - 1),
         genLiteral
       )
-  }
 
   // Generate an arbitrary And formula with a bounded size
   def genAnd(maxSize: Int): Gen[And] =
@@ -66,12 +61,18 @@ object TestNNF extends Properties("Test NNF"):
     isSimplified(simplified)
   }
 
+  property("simplify evaluation") = forAll { (formula: Formula) =>
+    val simplified = simplify(formula)
+    eval(formula) == eval(simplified)
+  }
+
   property("nnf correctness") = forAll { (formula: Formula) =>
     val _nnf = nnf(formula)
     isNNF(_nnf)
   }
 
-  property("evaluation") = forAll { (formula: Formula) =>
-    val res = eval(formula)
-    res || !res
+  property("nnf evaluation") = forAll { (formula: Formula) =>
+    // val res = eval(formula)
+    // res || !res
+    eval(formula) == eval(nnf(formula))
   }
