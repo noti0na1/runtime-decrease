@@ -1,15 +1,12 @@
-object While {
+object While:
 
   def foo()(using
       DecreaseState
-  ): Int = {
+  ): Int =
     var a = 0
     var i = 0
-    while (i < 10) {
+    while i < 10 do
       loop_decreases("while0", 10 - i):
         a = a + i
         i = i + 1
-    }
     a
-  }
-}

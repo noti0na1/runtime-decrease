@@ -1,7 +1,7 @@
 case class DecreaseState(
     stack: Map[String, Any] = Map.empty,
     recur_degrees: Map[String, Int] = Map.empty
-) {
+):
   def apply(key: String): Option[Any] = stack.get(key)
   def set(key: String, value: Any): DecreaseState = DecreaseState(
     stack + (key -> value),
@@ -12,7 +12,6 @@ case class DecreaseState(
     stack,
     recur_degrees + (key -> value)
   )
-}
 
 object EmptyDecreaseState:
   given DecreaseState = DecreaseState(Map.empty)
@@ -51,11 +50,10 @@ given [T <: NonEmptyTuple](using
 
 import math.Ordering.Implicits.infixOrderingOps
 
-def getFunctionName(offset: Int = 0): String = {
+def getFunctionName(offset: Int = 0): String =
   val stackTrace = Thread.currentThread.getStackTrace
   val elem = stackTrace(offset + 2)
   elem.getClassName() + "." + elem.getMethodName
-}
 
 def ds(using state: DecreaseState): DecreaseState = state
 
