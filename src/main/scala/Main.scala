@@ -1,5 +1,5 @@
 @main def testDecrease: Unit =
-  // println(summon[DefaultValue[(Int, Int)]].value)
+  // println(summon[ZeroValue[(Int, Int)]].value)
   // println(getFunctionName(0))
 
   given DecreaseState = DecreaseState(Map.empty)

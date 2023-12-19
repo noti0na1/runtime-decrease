@@ -13,27 +13,31 @@ case class DecreaseState(
     recur_degrees + (key -> value)
   )
 
+def ds(using state: DecreaseState): DecreaseState = state
+
 object EmptyDecreaseState:
   given DecreaseState = DecreaseState(Map.empty)
 
-trait DefaultValue[T]:
+trait ZeroValue[T]:
   def value: T
 
-given DefaultValue[Int] with
+def zero[T](using z: ZeroValue[T]): T = z.value
+
+given ZeroValue[Int] with
   def value = 0
 
-given DefaultValue[BigInt] with
+given ZeroValue[BigInt] with
   def value = BigInt(0)
 
 import Tuple.*
 
-given DefaultValue[EmptyTuple] with
+given ZeroValue[EmptyTuple] with
   def value = EmptyTuple
 
 given [H, T <: Tuple](using
-    head: DefaultValue[H],
-    tail: DefaultValue[T]
-): DefaultValue[H *: T] with
+    head: ZeroValue[H],
+    tail: ZeroValue[T]
+): ZeroValue[H *: T] with
   def value: H *: T = head.value *: tail.value
 
 given Ordering[EmptyTuple] with
@@ -55,20 +59,14 @@ def getFunctionName(offset: Int = 0): String =
   val elem = stackTrace(offset + 2)
   elem.getClassName() + "." + elem.getMethodName
 
-def ds(using state: DecreaseState): DecreaseState = state
-
-def decreases[V: Ordering, T](x: V)(using
-    state: DecreaseState,
-    default: DefaultValue[V]
-)(body: DecreaseState ?=> T) =
+def decreases[V: Ordering: ZeroValue, T](x: V)(using DecreaseState)(body: DecreaseState ?=> T) =
   genericDecreases(
     getFunctionName(1),
     x
   )(body)
 
-def while_decreases[V: Ordering, T](label: String, cond: => Boolean, x: => V)(using
-    state: DecreaseState,
-    default: DefaultValue[V]
+def while_decreases[V: Ordering: ZeroValue, T](label: String, cond: => Boolean, x: => V)(using
+    DecreaseState
 )(body: DecreaseState ?=> Unit): Unit =
   if cond then
     genericDecreases(
@@ -79,17 +77,14 @@ def while_decreases[V: Ordering, T](label: String, cond: => Boolean, x: => V)(us
       while_decreases(label, cond, x)(body)
     }
 
-def genericDecreases[V: Ordering, T](name: String, x: V)(using
-    state: DecreaseState,
-    default: DefaultValue[V]
-)(body: DecreaseState ?=> T) =
+def genericDecreases[V: Ordering: ZeroValue, T](name: String, x: V)(using DecreaseState)(body: DecreaseState ?=> T) =
   // println(s"decrease: ${name}, ${x}")
-  if x < default.value then
+  if x < zero then
     throw IllegalArgumentException(
       s"decrease called with negative measure: ${x} at ${name}"
     )
   else
-    state(name) match
+    ds(name) match
       case Some(last) =>
         // println(s"last: ${last}, x: ${x}")
         if x >= last.asInstanceOf[V] then
@@ -98,4 +93,4 @@ def genericDecreases[V: Ordering, T](name: String, x: V)(using
           )
       case None =>
       // println(s"first: ${x}")
-    body(using state.set(name, x))
+    body(using ds.set(name, x))
