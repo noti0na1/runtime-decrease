@@ -1,7 +1,6 @@
 case class DecreaseState(
     stack: Map[String, Any] = Map.empty,
-    recur_degrees: Map[String, Int] = Map.empty,
-    id: Int = 0
+    recur_degrees: Map[String, Int] = Map.empty
 ):
   def apply(key: String): Option[Any] = stack.get(key)
   def set(key: String, value: Any): DecreaseState =
@@ -11,12 +10,14 @@ case class DecreaseState(
   def set_degree(key: String, value: Int): DecreaseState =
     this.copy(recur_degrees = recur_degrees + (key -> value))
 
-  def id_inc: DecreaseState = this.copy(id = id + 1)
-
 def ds(using state: DecreaseState): DecreaseState = state
 
 object EmptyDecreaseState:
   given DecreaseState = DecreaseState(Map.empty)
+
+class NegativeMeasureException(msg: String) extends IllegalArgumentException(msg)
+
+class NonDecreasingMeasureException(msg: String) extends IllegalArgumentException(msg)
 
 trait ZeroValue[T]:
   def value: T
@@ -52,27 +53,27 @@ given [T <: NonEmptyTuple](using
     if cmp == 0 then tailOrd.compare(x.tail, y.tail)
     else cmp
 
-def getFunctionName(offset: Int = 0): String =
-  val stackTrace = Thread.currentThread.getStackTrace
-  val elem = stackTrace(offset + 2)
-  elem.getClassName() + "." + elem.getMethodName
-
-def decreases[V: Ordering: ZeroValue, T](x: V)(using DecreaseState)(body: DecreaseState ?=> T) =
-  genericDecreases(getFunctionName(1), x)(body)
+def decreases[V: Ordering: ZeroValue, T](x: V)(using
+    s: DecreaseState,
+    path: sourcecode.Enclosing
+)(body: DecreaseState ?=> T) =
+  genericDecreases(path.value, x)(body)
 
 def while_decreases[V: Ordering: ZeroValue, T](cond: => Boolean, x: => V)(using
-    DecreaseState
+    s: DecreaseState,
+    path: sourcecode.Enclosing,
+    line: sourcecode.Line
 )(body: DecreaseState ?=> Unit): Unit =
-  val name = getFunctionName(1) + "$while" + ds.id
+  val name = path.value + "$while:" + line.value
   def recur(using DecreaseState): Unit =
     if cond then genericDecreases(name, x) { body; recur }
-  recur(using ds.id_inc)
+  recur
 
 def genericDecreases[V: Ordering: ZeroValue, T](name: String, x: V)(using DecreaseState)(body: DecreaseState ?=> T) =
   import math.Ordering.Implicits.infixOrderingOps
   // println(s"decrease: ${name}, ${x}")
   if x < zero then
-    throw IllegalArgumentException(
+    throw NegativeMeasureException(
       s"decrease called with negative measure: ${x} at ${name}"
     )
   else
@@ -80,7 +81,7 @@ def genericDecreases[V: Ordering: ZeroValue, T](name: String, x: V)(using Decrea
       case Some(last) =>
         // println(s"last: ${last}, x: ${x}")
         if x >= last.asInstanceOf[V] then
-          throw IllegalArgumentException(
+          throw NonDecreasingMeasureException(
             s"decrease measure not decreased: ${last} <= ${x} at ${name}"
           )
       case None =>
