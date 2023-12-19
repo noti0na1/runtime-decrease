@@ -1,17 +1,17 @@
 case class DecreaseState(
     stack: Map[String, Any] = Map.empty,
-    recur_degrees: Map[String, Int] = Map.empty
+    recur_degrees: Map[String, Int] = Map.empty,
+    id: Int = 0
 ):
   def apply(key: String): Option[Any] = stack.get(key)
-  def set(key: String, value: Any): DecreaseState = DecreaseState(
-    stack + (key -> value),
-    recur_degrees
-  )
+  def set(key: String, value: Any): DecreaseState =
+    this.copy(stack = stack + (key -> value))
+
   def get_degree(key: String): Option[Int] = recur_degrees.get(key)
-  def set_degree(key: String, value: Int): DecreaseState = DecreaseState(
-    stack,
-    recur_degrees + (key -> value)
-  )
+  def set_degree(key: String, value: Int): DecreaseState =
+    this.copy(recur_degrees = recur_degrees + (key -> value))
+
+  def id_inc: DecreaseState = this.copy(id = id + 1)
 
 def ds(using state: DecreaseState): DecreaseState = state
 
@@ -52,32 +52,24 @@ given [T <: NonEmptyTuple](using
     if cmp == 0 then tailOrd.compare(x.tail, y.tail)
     else cmp
 
-import math.Ordering.Implicits.infixOrderingOps
-
 def getFunctionName(offset: Int = 0): String =
   val stackTrace = Thread.currentThread.getStackTrace
   val elem = stackTrace(offset + 2)
   elem.getClassName() + "." + elem.getMethodName
 
 def decreases[V: Ordering: ZeroValue, T](x: V)(using DecreaseState)(body: DecreaseState ?=> T) =
-  genericDecreases(
-    getFunctionName(1),
-    x
-  )(body)
+  genericDecreases(getFunctionName(1), x)(body)
 
-def while_decreases[V: Ordering: ZeroValue, T](label: String, cond: => Boolean, x: => V)(using
+def while_decreases[V: Ordering: ZeroValue, T](cond: => Boolean, x: => V)(using
     DecreaseState
 )(body: DecreaseState ?=> Unit): Unit =
-  if cond then
-    genericDecreases(
-      getFunctionName(1) + "$" + label,
-      x
-    ) {
-      body
-      while_decreases(label, cond, x)(body)
-    }
+  val name = getFunctionName(1) + "$while" + ds.id
+  def recur(using DecreaseState): Unit =
+    if cond then genericDecreases(name, x) { body; recur }
+  recur(using ds.id_inc)
 
 def genericDecreases[V: Ordering: ZeroValue, T](name: String, x: V)(using DecreaseState)(body: DecreaseState ?=> T) =
+  import math.Ordering.Implicits.infixOrderingOps
   // println(s"decrease: ${name}, ${x}")
   if x < zero then
     throw IllegalArgumentException(

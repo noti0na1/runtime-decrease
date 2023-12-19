@@ -12,7 +12,7 @@
 
   // println(Ackermann.ack(3, 3))
 
-  println(DisjunctiveArguments.f(10, 10))
+  println(DisjunctiveArguments.one_loop(10, 10))
 
   // println(McCarthy91.M(10))
   // println(McCarthy91.M1(10)) // expect error
