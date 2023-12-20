@@ -2,10 +2,8 @@ import scala.util.boundary, boundary.break
 object ReturnInWhile {
     def return5()(using DecreaseState): Int = {
         boundary {
-            while(true) {
-                loop_decreases("while0", 0) {
-                    break(5)
-                }
+            while_decreases(true, 0) {
+                break(5)
             }
         }
         assert(false, "unreachable code")
@@ -16,11 +14,9 @@ object ReturnInWhile {
         require(n >= 0)
         var i = 0
         boundary {
-            while(true) {
-                loop_decreases("while0", n - i) {
-                    if (i == n) break(i)
-                    else i += 1
-                }
+            while_decreases(true, n - i) {
+                if (i == n) break(i)
+                else i += 1
             }
         }
         assert(false, "unreachable code")
@@ -29,11 +25,9 @@ object ReturnInWhile {
 
     def return10()(using DecreaseState): Int = {
         boundary {
-            while(true) {
-                loop_decreases("while0", 0) {
-                    def f: Int = return 20
-                    break(10)
-                }
+            while_decreases(true, 0) {
+                def f: Int = return 20
+                break(10)
             }
         }
         assert(false, "unreachable code")
@@ -43,12 +37,10 @@ object ReturnInWhile {
     def return20()(using DecreaseState): Int = {
         var x = 0
         boundary {
-            while(true) {
-                loop_decreases("while0", 0) {
-                    def f: Int = return 20
-                    x = f
-                    break(x)
-                }
+            while_decreases(true, 0) {
+                def f: Int = return 20
+                x = f
+                break(x)
             }
         }
         assert(false, "unreachable code")
