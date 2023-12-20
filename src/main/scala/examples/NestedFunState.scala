@@ -30,8 +30,7 @@ object NestedFunState {
         }
 
         var i = 0
-        while (i < n) {
-            loop_decreases("while0", n - i)
+        while_decreases(i < n, n - i) {
             inc()
             i += 1
         }
