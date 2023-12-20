@@ -3,7 +3,7 @@ import org.scalacheck.Prop.*
 import org.scalacheck.Gen
 import org.scalacheck.Arbitrary
 
-object TestFindIndex extends Properties("Test FindIndex") {
+object TestFindIndex extends Properties("Test FindIndex"):
   import EmptyDecreaseState.given
 
   property("correctness of search") = forAll { (arr: Array[Int]) =>
@@ -12,4 +12,3 @@ object TestFindIndex extends Properties("Test FindIndex") {
       FindIndex.findIndex(arr, x) == arr.indexOf(x)
     }
   }
-}

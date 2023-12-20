@@ -1,40 +1,44 @@
 case class DecreaseState(
     stack: Map[String, Any] = Map.empty,
     recur_degrees: Map[String, Int] = Map.empty
-) {
+):
   def apply(key: String): Option[Any] = stack.get(key)
-  def set(key: String, value: Any): DecreaseState = DecreaseState(
-    stack + (key -> value),
-    recur_degrees
-  )
+  def set(key: String, value: Any): DecreaseState =
+    this.copy(stack = stack + (key -> value))
+
   def get_degree(key: String): Option[Int] = recur_degrees.get(key)
-  def set_degree(key: String, value: Int): DecreaseState = DecreaseState(
-    stack,
-    recur_degrees + (key -> value)
-  )
-}
+  def set_degree(key: String, value: Int): DecreaseState =
+    this.copy(recur_degrees = recur_degrees + (key -> value))
+
+def ds(using state: DecreaseState): DecreaseState = state
 
 object EmptyDecreaseState:
   given DecreaseState = DecreaseState(Map.empty)
 
-trait DefaultValue[T]:
+class NegativeMeasureException(msg: String) extends IllegalArgumentException(msg)
+
+class NonDecreasingMeasureException(msg: String) extends IllegalArgumentException(msg)
+
+trait ZeroValue[T]:
   def value: T
 
-given DefaultValue[Int] with
+def zero[T](using z: ZeroValue[T]): T = z.value
+
+given ZeroValue[Int] with
   def value = 0
 
-given DefaultValue[BigInt] with
+given ZeroValue[BigInt] with
   def value = BigInt(0)
 
 import Tuple.*
 
-given DefaultValue[EmptyTuple] with
+given ZeroValue[EmptyTuple] with
   def value = EmptyTuple
 
 given [H, T <: Tuple](using
-    head: DefaultValue[H],
-    tail: DefaultValue[T]
-): DefaultValue[H *: T] with
+    head: ZeroValue[H],
+    tail: ZeroValue[T]
+): ZeroValue[H *: T] with
   def value: H *: T = head.value *: tail.value
 
 given Ordering[EmptyTuple] with
@@ -49,51 +53,37 @@ given [T <: NonEmptyTuple](using
     if cmp == 0 then tailOrd.compare(x.tail, y.tail)
     else cmp
 
-import math.Ordering.Implicits.infixOrderingOps
-
-def getFunctionName(offset: Int = 0): String = {
-  val stackTrace = Thread.currentThread.getStackTrace
-  val elem = stackTrace(offset + 2)
-  elem.getClassName() + "." + elem.getMethodName
-}
-
-def ds(using state: DecreaseState): DecreaseState = state
-
-def decreases[V: Ordering, T](x: V)(using
-    state: DecreaseState,
-    default: DefaultValue[V]
+def decreases[V: Ordering: ZeroValue, T](x: V)(using
+    s: DecreaseState,
+    path: sourcecode.Enclosing
 )(body: DecreaseState ?=> T) =
-  genericDecreases(
-    getFunctionName(1),
-    x
-  )(body)
+  genericDecreases(path.value, x)(body)
 
-def loop_decreases[V: Ordering, T](label: String, x: V)(using
-    state: DecreaseState,
-    default: DefaultValue[V]
-)(body: DecreaseState ?=> T) =
-  genericDecreases(
-    getFunctionName(1) + "$" + label,
-    x
-  )(body)
+def while_decreases[V: Ordering: ZeroValue, T](cond: => Boolean, x: => V)(using
+    s: DecreaseState,
+    path: sourcecode.Enclosing,
+    line: sourcecode.Line
+)(body: DecreaseState ?=> Unit): Unit =
+  val name = path.value + "$while:" + line.value
+  def recur(using DecreaseState): Unit =
+    if cond then genericDecreases(name, x) { body; recur }
+  recur
 
-def genericDecreases[V: Ordering, T](name: String, x: V)(using
-    state: DecreaseState,
-    default: DefaultValue[V]
-)(body: DecreaseState ?=> T) =
+def genericDecreases[V: Ordering: ZeroValue, T](name: String, x: V)(using DecreaseState)(body: DecreaseState ?=> T) =
+  import math.Ordering.Implicits.infixOrderingOps
   // println(s"decrease: ${name}, ${x}")
-  if x < default.value then
-    throw IllegalArgumentException(
-      s"decrease called with negative measure: ${x}"
+  if x < zero then
+    throw NegativeMeasureException(
+      s"decrease called with negative measure: ${x} at ${name}"
     )
   else
-    state(name) match
+    ds(name) match
       case Some(last) =>
         // println(s"last: ${last}, x: ${x}")
         if x >= last.asInstanceOf[V] then
-          throw IllegalArgumentException(
-            s"decrease measure not decreased: ${last} <= ${x}"
+          throw NonDecreasingMeasureException(
+            s"decrease measure not decreased: ${last} <= ${x} at ${name}"
           )
       case None =>
       // println(s"first: ${x}")
-    body(using state.set(name, x))
+    body(using ds.set(name, x))
