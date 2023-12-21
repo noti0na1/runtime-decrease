@@ -5,9 +5,8 @@ object ReturnInWhile {
             while_decreases(true, 0) {
                 break(5)
             }
+            assert(false, "unreachable code")
         }
-        assert(false, "unreachable code")
-        0
     }
 
     def returnN(n: Int)(using DecreaseState): Int = {

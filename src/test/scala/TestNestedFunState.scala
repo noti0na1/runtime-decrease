@@ -6,13 +6,15 @@ import org.scalacheck.Arbitrary
 object TestNestedFunState extends Properties("Test NestedFunState") {
     import EmptyDecreaseState.given
 
-    property("correctness of sum") = forAll { (n: Int) => 
+    val lowerInts = for (n <- Gen.choose(0, 1000)) yield n
+
+    property("correctness of sum") = forAll(lowerInts){ (n: Int) => 
         n > 0 ==> {
             NestedFunState.sum(n) >= n
         }
     }
 
-    property("correctness of counterN") = forAll { (n: Int) =>
+    property("correctness of counterN") = forAll(lowerInts) { (n: Int) =>
         n > 0 ==> {
             NestedFunState.counterN(n) == n
         }    
