@@ -12,6 +12,7 @@ lazy val root = project
     ),
 
     libraryDependencies ++= Seq(
+      "com.lihaoyi" %% "sourcecode" % "0.3.1",
       "io.github.martinhh" %% "scalacheck-derived" % "0.4.2" % Test,
       "org.scalacheck" %% "scalacheck" % "1.17.0" % Test,
     ),
