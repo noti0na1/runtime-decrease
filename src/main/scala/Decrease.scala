@@ -1,5 +1,5 @@
 case class DecreaseState(
-    stack: Map[String, Any] = Map.empty,
+    stack: Map[String, Any] = Map.empty
 ):
   def apply(key: String): Option[Any] = stack.get(key)
   def set(key: String, value: Any): DecreaseState =

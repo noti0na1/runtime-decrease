@@ -9,7 +9,7 @@ object DisjunctiveArguments:
     // termination; instead we must resort to a lexicographic ranking function:
     // (x, y)
     while_decreases(x > 0 && y > 0, (x, y)) {
-    // while_decreases(x > 0 && y > 0, (20 - x, y)) {
+      // while_decreases(x > 0 && y > 0, (20 - x, y)) {
       println(s"while x: ${x}, y: ${y}")
       if rand.nextInt(2) == 1 then
         x = x - 1
