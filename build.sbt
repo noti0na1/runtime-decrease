@@ -21,8 +21,8 @@ lazy val root = project
       TestFrameworks.ScalaCheck,
       "-maxSize",
       "10",
-      // "-workers",
-      // "1",
+      "-workers",
+      "1",
       "-verbosity",
       "1"
     )

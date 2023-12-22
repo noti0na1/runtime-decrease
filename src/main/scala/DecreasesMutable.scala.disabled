@@ -1,36 +1,46 @@
-case class DecreaseState(
-    stack: Map[String, Any] = Map.empty,
-):
-  def apply(key: String): Option[Any] = stack.get(key)
-  def set(key: String, value: Any): DecreaseState =
-    DecreaseState(stack + (key -> value))
+object DecreasesStack:
+  import scala.collection.mutable.Map
+  val stack = Map[String, List[Any]]()
 
-def ds(using state: DecreaseState): DecreaseState = state
+  def apply(key: String): Option[Any] = stack.get(key).flatMap(_.headOption)
+
+  def set(key: String, value: Any): Unit =
+    stack.get(key) match
+      case Some(values) => stack.update(key, value :: values)
+      case None         => stack.update(key, List(value))
+
+  def pop(key: String): Unit =
+    stack.get(key) match
+      case Some(values) =>
+        if values.tail.isEmpty then stack.remove(key)
+        else stack.update(key, values.tail)
+      case None => ()
+
+// Easy to test two versions of Decreases
+case class DecreaseState()
 
 object EmptyDecreaseState:
-  given DecreaseState = DecreaseState(Map.empty)
+  given DecreaseState = DecreaseState()
 
 class NegativeMeasureException(msg: String) extends IllegalArgumentException(msg)
 
 class NonDecreasingMeasureException(msg: String) extends IllegalArgumentException(msg)
 
 def decreases[V: Ordering: ZeroValue, T](x: V)(using
-    s: DecreaseState,
     path: sourcecode.Enclosing
-)(body: DecreaseState ?=> T) =
+)(body: => T) =
   genericDecreases(path.value, x)(body)
 
 def while_decreases[V: Ordering: ZeroValue, T](cond: => Boolean, x: => V)(using
-    s: DecreaseState,
     path: sourcecode.Enclosing,
     line: sourcecode.Line
-)(body: DecreaseState ?=> Unit): Unit =
+)(body: => Unit): Unit =
   val name = path.value + "$while:" + line.value
-  def recur(using DecreaseState): Unit =
+  def recur: Unit =
     if cond then genericDecreases(name, x) { body; recur }
   recur
 
-def genericDecreases[V: Ordering: ZeroValue, T](name: String, x: V)(using DecreaseState)(body: DecreaseState ?=> T) =
+def genericDecreases[V: Ordering: ZeroValue, T](name: String, x: V)(body: => T) =
   import math.Ordering.Implicits.infixOrderingOps
   // println(s"decrease: ${name}, ${x}")
   if x < zero then
@@ -38,7 +48,7 @@ def genericDecreases[V: Ordering: ZeroValue, T](name: String, x: V)(using Decrea
       s"decrease called with negative measure: ${x} at ${name}"
     )
   else
-    ds(name) match
+    DecreasesStack(name) match
       case Some(last) =>
         // println(s"last: ${last}, x: ${x}")
         if x >= last.asInstanceOf[V] then
@@ -47,4 +57,7 @@ def genericDecreases[V: Ordering: ZeroValue, T](name: String, x: V)(using Decrea
           )
       case None =>
       // println(s"first: ${x}")
-    body(using ds.set(name, x))
+    DecreasesStack.set(name, x)
+    val result = body
+    DecreasesStack.pop(name)
+    result
